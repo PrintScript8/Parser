@@ -3,13 +3,13 @@ services:
     image: postgres:14
     container_name: parser-postgres
     ports:
-      - '5432:5432'
+      - '${DB_PORT}:5432'
     extra_hosts:
       - "host.docker.internal:host-gateway"
     environment:
-      POSTGRES_USER: 'your_username'
-      POSTGRES_PASSWORD: 'your_password'
-      POSTGRES_DB: 'your_database'
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      POSTGRES_DB: ${DB_NAME}
     volumes:
       - pgdata:/var/lib/postgresql/data
 
