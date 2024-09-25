@@ -1,3 +1,5 @@
+package printscript8.parser.utils
+
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.context.annotation.Configuration
 

@@ -1,4 +1,4 @@
-package printscript8.parser
+package printscript8.parser.controller
 
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.GetMapping
