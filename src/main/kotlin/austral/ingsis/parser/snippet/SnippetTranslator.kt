@@ -1,4 +1,4 @@
-package printscript8.parser.snippet
+package austral.ingsis.parser.snippet
 
 import java.io.InputStream
 
