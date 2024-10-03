@@ -22,7 +22,7 @@ repositories {
 		name = "GitHubPackages"
 		url = uri("https://maven.pkg.github.com/HiluLagos/PrintScript")
 		credentials {
-			username = project.findProperty("gpr.user") ?: System.getenv("GITHUB_USER")
+			username = project.findProperty("gpr.user") ?: System.getenv("GITHUB_ACTOR")
 			password = project.findProperty("gpr.key") ?: System.getenv("GITHUB_TOKEN")
 		}
 	}
