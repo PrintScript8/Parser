@@ -3,8 +3,8 @@ name: Verify CI
 on:
   push:
     branches:
-      - 'master'
+      - 'main'
 
 jobs:
   call_workflow:
-    uses: ezequielrickert/ingsis-library/.github/workflows/on-push.yml@main
+    uses: ezequielrickert/ingsis-library/.github/workflows/on-pull-request.yml@main
