@@ -20,7 +20,7 @@ repositories {
 	mavenCentral()
 	maven {
 		name = "GitHubPackages"
-		url = uri("https://maven.pkg.github.com/HiluLagos/PrintScript")
+		url = uri("https://maven.pkg.github.com/PrintScript8/PrintScript")
 		credentials {
 			username = System.getenv("GITHUB_ACTOR")
 			password = System.getenv("GITHUB_TOKEN")
