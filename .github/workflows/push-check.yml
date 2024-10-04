@@ -15,4 +15,4 @@ jobs:
     needs: verify_valid
     uses: PrintScript8/ingsis-library/.github/workflows/docker-image.yml@main
     with:
-      service_name: 'Parser'
+      service_name: 'parser'
