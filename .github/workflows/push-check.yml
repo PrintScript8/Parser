@@ -16,3 +16,6 @@ jobs:
     uses: ezequielrickert/ingsis-library/.github/workflows/docker-image.yml@main
     with:
       service_name: 'parser'
+
+permissions:
+  packages: write
