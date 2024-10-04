@@ -8,11 +8,11 @@ on:
 jobs:
   verify_valid:
     name: Verify valid image
-    uses: ezequielrickert/ingsis-library/.github/workflows/on-pull-request.yml@main
+    uses: PrintScript8/ingsis-library/.github/workflows/on-pull-request.yml@main
 
   publish_docker:
     name: Publish Docker image
     needs: verify_valid
-    uses: ezequielrickert/ingsis-library/.github/workflows/docker-image.yml@main
+    uses: PrintScript8/ingsis-library/.github/workflows/docker-image.yml@main
     with:
       service_name: 'parser'
