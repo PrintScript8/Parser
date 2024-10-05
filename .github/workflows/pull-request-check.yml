@@ -8,5 +8,3 @@ on:
 jobs:
   call_workflow:
     uses: PrintScript8/ingsis-library/.github/workflows/on-pull-request.yml@main
-    with:
-      service_name: 'parser'
