@@ -19,5 +19,3 @@ jobs:
 
 permissions:
   packages: write
-
-#TEST IF BROKEN :)
