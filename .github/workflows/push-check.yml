@@ -23,9 +23,9 @@ jobs:
     needs: publish_docker
     uses: PrintScript8/ingsis-library/.github/workflows/vm-login.yml@main
     with:
-      service_name: ${{ github.ref == 'refs/heads/main' }}
+      service_name: ${{ github.ref == 'refs/heads/main' && 'parser' || 'parser-dev' }}
       port: "8081"
-      is_dev: ${{ github.ref == 'refs/heads/dev' && 'true' || 'false' }}
+      is_dev: ${{ github.ref == 'refs/heads/dev' }}
       is_image: true
 
 permissions:
