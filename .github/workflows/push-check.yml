@@ -3,6 +3,7 @@ name: Verify CI
 on:
   push:
     branches:
+      - 'dev'
       - 'main'
 
 jobs:
@@ -15,7 +16,15 @@ jobs:
     needs: verify_valid
     uses: PrintScript8/ingsis-library/.github/workflows/docker-image.yml@main
     with:
-      service_name: 'parser'
+      service_name: ${{ github.ref == 'refs/heads/main' && 'parser' || 'parser-dev' }}
+
+  rerun_image:
+    name: Rerun Docker image
+    needs: publish_docker
+    uses: PrintScript8/ingsis-library/.github/workflows/vm-login.yml@main
+    with:
+      service_name: ${{ github.ref == 'refs/heads/main' && 'parser' || 'parser-dev' }}
+      port: "8081"
 
 permissions:
   packages: write
