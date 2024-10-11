@@ -25,6 +25,8 @@ jobs:
     with:
       service_name: ${{ github.ref == 'refs/heads/main' && 'parser' || 'parser-dev' }}
       port: "8081"
+      is_dev: ${{ github.ref == 'refs/heads/dev' && 'true' || 'false' }}
+      is_image: true
 
 permissions:
   packages: write
