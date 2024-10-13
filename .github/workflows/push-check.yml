@@ -27,9 +27,6 @@ jobs:
       port: "8081"
       is_dev: ${{ github.ref == 'refs/heads/dev' }}
       is_image: true
-      user: ${{ secrets.DEV_USER }}
-      key: ${{ secrets.DEV_KEY }}
-      host: ${{ secrets.DEV_HOST }}
 
 
 
