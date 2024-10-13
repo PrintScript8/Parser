@@ -32,3 +32,4 @@ jobs:
 
 permissions:
   packages: write
+  secrets: read
