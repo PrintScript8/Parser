@@ -27,10 +27,10 @@ jobs:
       port: "8081"
       is_dev: ${{ github.ref == 'refs/heads/dev' }}
       is_image: true
-    env:
-      SSH_HOST_DEV: ${{ secrets.SSH_HOST_DEV }}
-      SSH_USER_DEV: ${{ secrets.SSH_USER_DEV }}
-      SSH_KEY_DEV: ${{ secrets.SSH_KEY_DEV }}
+  env:
+    SSH_HOST_DEV: ${{ secrets.SSH_HOST_DEV }}
+    SSH_USER_DEV: ${{ secrets.SSH_USER_DEV }}
+    SSH_KEY_DEV: ${{ secrets.SSH_KEY_DEV }}
 
 
 
