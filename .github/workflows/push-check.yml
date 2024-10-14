@@ -27,8 +27,7 @@ jobs:
       port: "8081"
       is_dev: ${{ github.ref == 'refs/heads/dev' }}
       is_image: true
-    secrets:
-      inherit: true
+    secrets: inherit
 
 
 permissions:
