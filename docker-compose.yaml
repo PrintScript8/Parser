@@ -1,10 +1,13 @@
 services:
-  app:
+  parser-app:
     build:
       context: .
       dockerfile: Dockerfile
     ports:
-      - "8080:8080"
+      - "8081:8081"
+    networks:
+      - snippet-searcher-network
 
-volumes:
-  pgdata:
+networks:
+  snippet-searcher-network:
+    external: true
