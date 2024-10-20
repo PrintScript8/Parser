@@ -1,0 +1,17 @@
+server:
+  port: 8081
+
+# redis host and port parameters
+spring:
+  data:
+    redis:
+      host: ${REDIS_HOST:localhost}
+      port: ${REDIS_PORT:6379}
+
+# streamKeys to be used by producers
+stream:
+  key: "mystream"
+
+# groupIds to be used by consumers
+groups:
+  product: "productcreated"
