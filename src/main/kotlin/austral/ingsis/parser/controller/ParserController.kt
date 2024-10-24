@@ -1,5 +1,6 @@
 package austral.ingsis.parser.controller
 
+import austral.ingsis.parser.exception.ProcessorException
 import austral.ingsis.parser.processor.CodeProcessorFactory
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
@@ -15,9 +16,9 @@ data class SnippetRequest(
 )
 
 @RestController
+@Suppress("SwallowedException", "TooGenericExceptionCaught")
 @RequestMapping("/parser")
 class ParserController {
-
     @PostMapping("/validate")
     fun validateSnippet(
         @RequestBody request: SnippetRequest,
@@ -25,14 +26,14 @@ class ParserController {
         return try {
             val processor = CodeProcessorFactory.getProcessor(request.language)
             if (processor.validate(request.code)) {
-                ResponseEntity.ok("Snippet is valid")
+                ResponseEntity.ok("Valid Snippet")
             } else {
-                ResponseEntity.badRequest().body("Snippet is invalid")
+                ResponseEntity.badRequest().body("Invalid Snippet")
             }
         } catch (e: IllegalArgumentException) {
-            ResponseEntity.badRequest().body("Unsupported language")
-        } catch (e: Exception) {
-            ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Error during validation")
+            ResponseEntity.badRequest().body("Invalid Snippet: " + e.message)
+        } catch (e: ProcessorException) {
+            ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Error during validation: " + e.message)
         }
     }
 

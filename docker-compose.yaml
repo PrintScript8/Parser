@@ -5,9 +5,3 @@ services:
       dockerfile: Dockerfile
     ports:
       - "8081:8081"
-    networks:
-      - snippet-searcher-network
-
-networks:
-  snippet-searcher-network:
-    external: true

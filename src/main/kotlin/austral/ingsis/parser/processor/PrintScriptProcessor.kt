@@ -1,6 +1,6 @@
 package austral.ingsis.parser.processor
 
-import austral.ingsis.parser.exception.ValidationException
+import austral.ingsis.parser.exception.ProcessorException
 import runner.Operations
 import java.io.ByteArrayInputStream
 import java.io.InputStream
@@ -12,21 +12,19 @@ class PrintScriptProcessor : CodeProcessor {
         return try {
             runner.validate()
             true
-        } catch (e: Exception) {
-            throw ValidationException("Validation failed for the given code", e)
+        } catch (e: ProcessorException) {
+            throw ProcessorException("Validation failed for the given code", e)
         }
     }
 
     override fun execute(code: String): List<String> {
-
         val runner = Operations(toInputStream(code), "1.1", null)
 
         return try {
             runner.execute().asSequence().toList()
-        } catch (e: Exception) {
-            throw e
+        } catch (e: ProcessorException) {
+            throw ProcessorException("Execution failed", e)
         }
-
     }
 
     override fun format(code: String): String {
@@ -34,8 +32,8 @@ class PrintScriptProcessor : CodeProcessor {
 
         return try {
             runner.format()
-        } catch (e: Exception) {
-            throw e
+        } catch (e: ProcessorException) {
+            throw ProcessorException("Formatting failed", e)
         }
     }
 
@@ -47,8 +45,8 @@ class PrintScriptProcessor : CodeProcessor {
 
         return try {
             runner.analyze(config)
-        } catch (e: Exception) {
-            throw e
+        } catch (e: ProcessorException) {
+            throw ProcessorException("Analysis failed", e)
         }
     }
 
