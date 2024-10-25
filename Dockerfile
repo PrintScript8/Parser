@@ -8,7 +8,7 @@ WORKDIR /app
 COPY build/libs/parser-0.0.1-SNAPSHOT.jar app.jar
 
 # Expose port 8080 to the host
-EXPOSE 8080
+EXPOSE 8081
 
 # Define the command to run the application
 CMD ["java", "-jar", "app.jar"]
