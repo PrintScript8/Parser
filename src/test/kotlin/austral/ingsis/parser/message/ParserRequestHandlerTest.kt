@@ -1,5 +1,6 @@
 package austral.ingsis.parser.message
 
+import austral.ingsis.parser.service.AuthService
 import com.fasterxml.jackson.databind.ObjectMapper
 import io.mockk.every
 import io.mockk.mockk
@@ -25,11 +26,14 @@ class ParserRequestHandlerTest {
         restClientBuilder = mockk()
         restClient = mockk()
         logger = mockk(relaxed = true)
+        val authService = mockk<AuthService>()
 
         every { restClientBuilder.baseUrl(any()) } returns restClientBuilder
         every { restClientBuilder.build() } returns restClient
+        every { authService.validateToken(any()) } returns "testToken"
+
         parserRequestHandler =
-            spyk(ParserRequestHandler(redisTemplate, "streamKey", "groupId", restClientBuilder)) {
+            spyk(ParserRequestHandler(redisTemplate, "streamKey", "groupId", restClientBuilder, authService)) {
                 every { this@spyk.logger } returns this@ParserRequestHandlerTest.logger
             }
     }
@@ -38,10 +42,10 @@ class ParserRequestHandlerTest {
     fun `test onMessage with validate action`() {
         val record = mockk<ObjectRecord<String, String>>()
         val objectMapper = ObjectMapper()
-        val executeRequest = ExecuteRequest(1L, "printscript", "{}", "validate", 1L)
+        val executeRequest = ExecuteRequest("testToken", "printscript", "{}", "validate", 1L)
         val jsonMessage = objectMapper.writeValueAsString(executeRequest)
 
-        every { parserRequestHandler.getSnippets(executeRequest.ownerId) } returns emptyList()
+        every { parserRequestHandler.getSnippets(executeRequest.token) } returns emptyList()
 
         every { record.value } returns jsonMessage
 
@@ -64,10 +68,10 @@ class ParserRequestHandlerTest {
                 "        \"newlineBeforePrintln\": 1\n" +
                 "    }\n" +
                 "}"
-        val executeRequest = ExecuteRequest(1L, "printscript", config, "format", 1L)
+        val executeRequest = ExecuteRequest("testToken", "printscript", config, "format", 1L)
         val jsonMessage = objectMapper.writeValueAsString(executeRequest)
 
-        every { parserRequestHandler.getSnippets(executeRequest.ownerId) } returns emptyList()
+        every { parserRequestHandler.getSnippets(executeRequest.token) } returns emptyList()
 
         every { record.value } returns jsonMessage
 
@@ -81,10 +85,10 @@ class ParserRequestHandlerTest {
     fun `test onMessage with lint action`() {
         val record = mockk<ObjectRecord<String, String>>()
         val objectMapper = ObjectMapper()
-        val executeRequest = ExecuteRequest(1L, "printscript", "{}", "lint", 1L)
+        val executeRequest = ExecuteRequest("testToken", "printscript", "{}", "lint", 1L)
         val jsonMessage = objectMapper.writeValueAsString(executeRequest)
 
-        every { parserRequestHandler.getSnippets(executeRequest.ownerId) } returns emptyList()
+        every { parserRequestHandler.getSnippets(executeRequest.token) } returns emptyList()
 
         every { record.value } returns jsonMessage
 

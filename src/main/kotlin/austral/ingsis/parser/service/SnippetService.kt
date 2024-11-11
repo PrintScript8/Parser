@@ -31,7 +31,7 @@ class SnippetService(
         language: String,
         snippetId: Long,
         config: String,
-        id: Long,
+        token: String,
     ): String {
         val formattedSnippet = CodeProcessorFactory.getProcessor(language).format(snippet, config)
         bucketClient.put()
@@ -41,7 +41,7 @@ class SnippetService(
 
         snippetClient.put()
             .uri("/snippets/status")
-            .headers { headers -> headers.set("id", id.toString()) }
+            .headers { headers -> headers.set("Authorization", token) }
             .body(SetStatus(snippetId, "compliant"))
             .retrieve()
         return formattedSnippet
@@ -52,19 +52,19 @@ class SnippetService(
         config: String,
         language: String,
         snippetId: Long,
-        id: Long,
+        token: String,
     ) {
         val result = CodeProcessorFactory.getProcessor(language).analyze(snippet, config)
         if (result.isNotEmpty()) {
             snippetClient.put()
                 .uri("/snippets/status")
-                .headers { headers -> headers.set("id", id.toString()) }
+                .headers { headers -> headers.set("Authorization", token) }
                 .body(SetStatus(snippetId, "non-compliant"))
                 .retrieve()
         } else {
             snippetClient.put()
                 .uri("/snippets/status")
-                .headers { headers -> headers.set("id", id.toString()) }
+                .headers { headers -> headers.set("Authorization", token) }
                 .body(SetStatus(snippetId, "compliant"))
                 .retrieve()
         }
@@ -79,10 +79,14 @@ class SnippetService(
         return snippet ?: throw NotFoundException()
     }
 
-    fun getTests(snippetId: Long): List<SimpleTest> {
+    fun getTests(
+        snippetId: Long,
+        token: String,
+    ): List<SimpleTest> {
         val response =
             snippetClient.get()
                 .uri("/test/retrieve/{id}", snippetId)
+                .headers { headers -> headers.set("Authorization", token) }
                 .retrieve()
                 .body(object : ParameterizedTypeReference<List<SimpleTest>>() {})
         return response ?: throw NotFoundException()
@@ -102,7 +106,7 @@ class SnippetService(
         language: String,
         tests: List<SimpleTest>,
         snippetId: Long,
-        id: Long,
+        token: String,
     ) {
         for (test in tests) {
             val response = CodeProcessorFactory.getProcessor(language).execute(code, test.input)
@@ -110,7 +114,7 @@ class SnippetService(
             if (response != test.output) {
                 snippetClient.put()
                     .uri("/snippets/status")
-                    .headers { headers -> headers.set("id", id.toString()) }
+                    .headers { headers -> headers.set("Authorization", token) }
                     .body(SetStatus(snippetId, "failed"))
                     .retrieve()
                 Thread.sleep(1000)
@@ -119,7 +123,7 @@ class SnippetService(
         }
         snippetClient.put()
             .uri("/snippets/status")
-            .headers { headers -> headers.set("id", id.toString()) }
+            .headers { headers -> headers.set("Authorization", token) }
             .body(SetStatus(snippetId, "compliant"))
             .retrieve()
     }

@@ -39,7 +39,7 @@ class LinterActionHandlerTest {
         val snippetId = 1L
         val language = "kotlin"
         val rules = "rules"
-        val id = 123L
+        val token = "testToken"
         val snippet = "fun main() {}"
 
         `when`(snippetService.getSnippetById(snippetId)).thenReturn(snippet)
@@ -49,10 +49,10 @@ class LinterActionHandlerTest {
             .andExpect(method(HttpMethod.PUT))
             .andRespond(withSuccess())
 
-        actionHandler.handleAnalyze(listOf(snippetId), language, rules, id)
+        actionHandler.handleAnalyze(listOf(snippetId), language, rules, token)
 
         // Verify interactions
         verify(snippetService).getSnippetById(snippetId)
-        verify(snippetService).analyzeSnippet(snippet, rules, language, snippetId, id)
+        verify(snippetService).analyzeSnippet(snippet, rules, language, snippetId, token)
     }
 }

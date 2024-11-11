@@ -29,6 +29,11 @@ class CommunicationController(private val authService: AuthService) {
     fun validateToken(
         @RequestHeader("Authorization", required = false) token: String,
     ): ResponseEntity<String> {
-        return authService.validateToken(token)
+        val result = authService.validateToken(token)
+        return if (result != null) {
+            ResponseEntity.ok("Token is valid")
+        } else {
+            ResponseEntity.badRequest().body("Token is invalid")
+        }
     }
 }

@@ -1,5 +1,6 @@
 package austral.ingsis.parser.message
 
+import austral.ingsis.parser.service.AuthService
 import austral.ingsis.parser.service.SnippetService
 import com.fasterxml.jackson.databind.ObjectMapper
 import org.apache.logging.log4j.LogManager
@@ -11,6 +12,7 @@ import org.springframework.data.redis.core.RedisTemplate
 import org.springframework.data.redis.stream.StreamReceiver
 import org.springframework.stereotype.Component
 import org.springframework.web.client.RestClient
+import java.nio.file.AccessDeniedException
 import java.time.Duration
 
 @Component
@@ -21,6 +23,7 @@ class ParserRequestHandler
         @Value("\${stream.key}") streamKey: String,
         @Value("\${groups.product}") groupId: String,
         @Autowired private val restClientBuilder: RestClient.Builder,
+        @Autowired private val authService: AuthService,
     ) : RedisStreamConsumer<String>(streamKey, groupId, redis) {
         private val permissionsClient = restClientBuilder.baseUrl("http://permission-service:8080").build()
         val logger = LogManager.getLogger(ParserRequestHandler::class.java)
@@ -31,9 +34,9 @@ class ParserRequestHandler
             logger.info("Received message: $jsonMessage")
             val executeRequest = objectMapper.readValue(jsonMessage, ExecuteRequest::class.java)
             logger.info("Received message: $executeRequest")
-            val snippets = getSnippets(executeRequest.ownerId)
+            val snippets = getSnippets(executeRequest.token)
             val actionHandler = ActionHandler(SnippetService(restClientBuilder), restClientBuilder)
-
+            val ownerId = getIdByToken(executeRequest.token)
             when (executeRequest.action) {
                 "validate" -> actionHandler.handleValidate(snippets, executeRequest.language)
                 "format" ->
@@ -41,20 +44,20 @@ class ParserRequestHandler
                         snippets,
                         executeRequest.language,
                         executeRequest.rules,
-                        executeRequest.ownerId,
+                        executeRequest.token,
                     )
                 "execute" ->
                     actionHandler.handleExecute(
                         executeRequest.language,
-                        executeRequest.ownerId,
                         executeRequest.snippetId,
+                        executeRequest.token,
                     )
                 "lint" ->
                     actionHandler.handleAnalyze(
                         snippets,
                         executeRequest.language,
                         executeRequest.rules,
-                        executeRequest.ownerId,
+                        executeRequest.token,
                     )
                 else -> throw IllegalArgumentException("Invalid action")
             }
@@ -68,7 +71,16 @@ class ParserRequestHandler
                 .build()
         }
 
-        fun getSnippets(ownerId: Long): List<Long> {
+        private fun getIdByToken(token: String): String {
+            val id: String? = authService.validateToken(token)
+            if (id != null) {
+                return id
+            }
+            // error, not authenticated
+            throw AccessDeniedException("Could not validate user by it's token")
+        }
+
+        fun getSnippets(ownerId: String): List<Long> {
             val response =
                 permissionsClient.get()
                     .uri("/users/snippets/{id}", ownerId)

@@ -48,7 +48,7 @@ class SnippetServiceTests {
                 "        \"newlineBeforePrintln\": 1\n" +
                 "    }\n" +
                 "}"
-        val id = 123L
+        val token = "testToken"
 
         mockServer.expect(ExpectedCount.once(), requestTo("http://asset-service:8080/v1/asset/snippet/$snippetId"))
             .andExpect(method(HttpMethod.PUT))
@@ -57,7 +57,7 @@ class SnippetServiceTests {
             .andExpect(method(HttpMethod.PUT))
             .andRespond(withSuccess())
 
-        val result = snippetService.formatSnippet(snippet, language, snippetId, config, id)
+        val result = snippetService.formatSnippet(snippet, language, snippetId, config, token)
 
         assertEquals(formattedSnippet, result)
         mockServer.verify()
@@ -69,13 +69,13 @@ class SnippetServiceTests {
         val snippet = "let a: number = 2;"
         val language = "printscript"
         val config = "{}"
-        val id = 123L
+        val token = "testToken"
 
         mockServer.expect(ExpectedCount.once(), requestTo("http://snippet-service:8080/snippets/status"))
             .andExpect(method(HttpMethod.PUT))
             .andRespond(withSuccess())
 
-        snippetService.analyzeSnippet(snippet, config, language, snippetId, id)
+        snippetService.analyzeSnippet(snippet, config, language, snippetId, token)
 
         // Verify the status update
         mockServer.verify()
@@ -100,12 +100,13 @@ class SnippetServiceTests {
     fun `test getTests`() {
         val snippetId = 1L
         val expectedResponse = "[{\"name\":\"Test 1\",\"input\":[\"input1\"],\"output\":[\"output1\"]}]"
+        val token = "testToken"
 
         mockServer.expect(ExpectedCount.once(), requestTo("http://snippet-service:8080/test/retrieve/$snippetId"))
             .andExpect(method(HttpMethod.GET))
             .andRespond(withSuccess(expectedResponse, MediaType.APPLICATION_JSON))
 
-        val result = snippetService.getTests(snippetId)
+        val result = snippetService.getTests(snippetId, token)
 
         assertNotNull(result)
         assertEquals(1, result.size)
@@ -130,14 +131,14 @@ class SnippetServiceTests {
         val code = "let a: number = 2;"
         val language = "printscript"
         val snippetId = 1L
-        val id = 123L
+        val token = "testToken"
         val tests = listOf(SimpleTest(listOf("input1"), listOf("output1")))
 
         mockServer.expect(ExpectedCount.once(), requestTo("http://snippet-service:8080/snippets/status"))
             .andExpect(method(HttpMethod.PUT))
             .andRespond(withSuccess())
 
-        snippetService.executeMultipleTests(code, language, tests, snippetId, id)
+        snippetService.executeMultipleTests(code, language, tests, snippetId, token)
         mockServer.verify()
     }
 }

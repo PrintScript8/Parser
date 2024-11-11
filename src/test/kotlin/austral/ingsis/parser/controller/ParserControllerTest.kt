@@ -1,7 +1,6 @@
 package austral.ingsis.parser.controller
 
 import austral.ingsis.parser.service.SnippetService
-import jakarta.servlet.http.HttpServletRequest
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
@@ -25,9 +24,6 @@ class ParserControllerTest {
 
     @Mock
     private lateinit var snippetService: SnippetService
-
-    @Mock
-    private lateinit var httpServletRequest: HttpServletRequest
 
     private lateinit var parserController: ParserController
 
@@ -80,22 +76,21 @@ class ParserControllerTest {
     fun `formatSnippet returns formatted code`() {
         // Arrange
         val formatRequest = FormatRequest("code", "kotlin", 1L, "config")
-        val userId = 123L
+        val token = "testToken"
         val expectedResponse = "formatted code"
 
-        `when`(httpServletRequest.getHeader("id")).thenReturn(userId.toString())
         `when`(
             snippetService.formatSnippet(
                 formatRequest.code,
                 formatRequest.language,
                 formatRequest.id,
                 formatRequest.config,
-                userId,
+                token,
             ),
         ).thenReturn(expectedResponse)
 
         // Act
-        val response = parserController.formatSnippet(formatRequest, httpServletRequest)
+        val response = parserController.formatSnippet(formatRequest, token)
 
         // Assert
         assertEquals(HttpStatus.OK, response.statusCode)
@@ -105,7 +100,7 @@ class ParserControllerTest {
             formatRequest.language,
             formatRequest.id,
             formatRequest.config,
-            userId,
+            token,
         )
     }
 

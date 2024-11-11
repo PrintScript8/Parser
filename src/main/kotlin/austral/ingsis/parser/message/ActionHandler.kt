@@ -24,52 +24,52 @@ class ActionHandler(
         snippets: List<Long>,
         language: String,
         config: String,
-        id: Long,
+        token: String,
     ) {
         for (snippetId in snippets) {
             snippetClient.put()
                 .uri("/snippets/status")
-                .headers { headers -> headers.set("id", id.toString()) }
+                .headers { headers -> headers.set("Authorization", token) }
                 .body(SetStatus(snippetId, "pending"))
                 .retrieve()
                 .toEntity(String::class.java)
         }
         for (snippetId in snippets) {
             val snippet: String = snippetService.getSnippetById(snippetId)
-            snippetService.formatSnippet(snippet, language, snippetId, config, id)
+            snippetService.formatSnippet(snippet, language, snippetId, config, token)
         }
     }
 
     fun handleExecute(
         language: String,
-        ownerId: Long,
         snippetId: Long?,
+        token: String,
     ) {
         if (snippetId == null) {
             throw NoSuchElementException("Snippet id is null")
         }
         val snippet: String = snippetService.getSnippetById(snippetId)
-        val tests: List<SimpleTest> = snippetService.getTests(snippetId)
-        snippetService.executeMultipleTests(snippet, language, tests, snippetId, ownerId)
+        val tests: List<SimpleTest> = snippetService.getTests(snippetId, token)
+        snippetService.executeMultipleTests(snippet, language, tests, snippetId, token)
     }
 
     fun handleAnalyze(
         snippets: List<Long>,
         language: String,
         rules: String,
-        id: Long,
+        token: String,
     ) {
         for (snippetId in snippets) {
             snippetClient.put()
                 .uri("/snippets/status")
-                .headers { headers -> headers.set("id", id.toString()) }
+                .headers { headers -> headers.set("Authorization", token) }
                 .body(SetStatus(snippetId, "pending"))
                 .retrieve()
                 .toEntity(String::class.java)
         }
         for (snippetId in snippets) {
             val snippet: String = snippetService.getSnippetById(snippetId)
-            snippetService.analyzeSnippet(snippet, rules, language, snippetId, id)
+            snippetService.analyzeSnippet(snippet, rules, language, snippetId, token)
         }
     }
 }

@@ -9,14 +9,14 @@ class ExecuteRequestTest {
     fun `test ExecuteRequest creation`() {
         val executeRequest =
             ExecuteRequest(
-                ownerId = 1L,
+                token = "token",
                 language = "Kotlin",
                 rules = "rule1",
                 action = "execute",
                 snippetId = 2L,
             )
 
-        assertEquals(1L, executeRequest.ownerId)
+        assertEquals("token", executeRequest.token)
         assertEquals("Kotlin", executeRequest.language)
         assertEquals("rule1", executeRequest.rules)
         assertEquals("execute", executeRequest.action)
@@ -27,14 +27,14 @@ class ExecuteRequestTest {
     fun `test ExecuteRequest creation with null snippetId`() {
         val executeRequest =
             ExecuteRequest(
-                ownerId = 1L,
+                token = "token",
                 language = "Kotlin",
                 rules = "rule1",
                 action = "execute",
                 snippetId = null,
             )
 
-        assertEquals(1L, executeRequest.ownerId)
+        assertEquals("token", executeRequest.token)
         assertEquals("Kotlin", executeRequest.language)
         assertEquals("rule1", executeRequest.rules)
         assertEquals("execute", executeRequest.action)

@@ -1,11 +1,11 @@
 package austral.ingsis.parser.controller
 
 import austral.ingsis.parser.service.SnippetService
-import jakarta.servlet.http.HttpServletRequest
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.PutMapping
 import org.springframework.web.bind.annotation.RequestBody
+import org.springframework.web.bind.annotation.RequestHeader
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RestController
 import org.springframework.web.client.RestClient
@@ -32,16 +32,15 @@ class ParserController(
     @PutMapping("/format")
     fun formatSnippet(
         @RequestBody formatRequest: FormatRequest,
-        request: HttpServletRequest,
+        @RequestHeader("Authorization") token: String,
     ): ResponseEntity<String> {
-        val userId = request.getHeader("id").toLong()
         val formattedSnippet =
             snippetService.formatSnippet(
                 formatRequest.code,
                 formatRequest.language,
                 formatRequest.id,
                 formatRequest.config,
-                userId,
+                token,
             )
         return ResponseEntity.ok(formattedSnippet)
     }

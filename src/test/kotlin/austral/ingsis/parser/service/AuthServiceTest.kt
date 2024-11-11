@@ -1,54 +1,86 @@
 package austral.ingsis.parser.service
 
+import org.junit.jupiter.api.Assertions.assertNull
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.mockito.Mockito
-import org.springframework.http.HttpStatus
-import org.springframework.test.web.client.MockRestServiceServer
-import org.springframework.test.web.client.match.MockRestRequestMatchers
-import org.springframework.test.web.client.response.MockRestResponseCreators
+import org.mockito.MockitoAnnotations
+import org.springframework.http.HttpEntity
+import org.springframework.http.HttpHeaders
+import org.springframework.http.HttpMethod
 import org.springframework.web.client.RestTemplate
 
 class AuthServiceTest {
     private lateinit var authService: AuthService
     private lateinit var restTemplate: RestTemplate
-    private lateinit var mockServer: MockRestServiceServer
 
     @BeforeEach
     fun setUp() {
-        restTemplate = Mockito.spy(RestTemplate()) // We spy on RestTemplate to track its interactions
+        MockitoAnnotations.openMocks(this)
+        restTemplate = Mockito.mock(RestTemplate::class.java)
         authService = AuthService()
-
-        mockServer = MockRestServiceServer.createServer(restTemplate)
+        authService.restTemplate = restTemplate
     }
 
     @Test
-    fun `test validateToken with UnknownHostException`() {
-        // Arrange
-        val token = "Bearer invalidToken"
-        mockServer.expect(MockRestRequestMatchers.requestTo("http://authorization:8087/authorize/auth0"))
-            .andRespond(MockRestResponseCreators.withStatus(HttpStatus.INTERNAL_SERVER_ERROR)) // Simulate server error
+    fun `should return user id for valid token`() {
+        val token = "valid-token"
+        val headers = HttpHeaders()
+        headers.set("Authorization", token)
+        val requestEntity = HttpEntity<String>(headers)
+        // val responseBody = mapOf("id" to "user-id")
+        // val responseEntity = ResponseEntity(responseBody, HttpStatus.OK)
 
-        // Act
-        val response = authService.validateToken(token)
+        Mockito.`when`(
+            restTemplate.exchange(
+                "http://authorization-service:8080/authorize/auth0",
+                HttpMethod.POST,
+                requestEntity,
+                Map::class.java,
+            ),
+        )
 
-        // Assert
-        assert(response.statusCode == HttpStatus.INTERNAL_SERVER_ERROR)
+        val result = authService.validateToken(token)
     }
 
     @Test
-    fun `test validateToken with ResourceAccessException`() {
-        // Arrange
-        val token = "Bearer invalidToken"
-        mockServer.expect(MockRestRequestMatchers.requestTo("http://authorization:8087/authorize/auth0"))
-            .andRespond(
-                MockRestResponseCreators.withStatus(HttpStatus.INTERNAL_SERVER_ERROR),
-            )
+    fun `should return null for unauthorized token`() {
+        val token = "unauthorized-token"
+        val headers = HttpHeaders()
+        headers.set("Authorization", token)
+        val requestEntity = HttpEntity<String>(headers)
+        // val responseEntity = ResponseEntity<Map<String, Any>>(HttpStatus.UNAUTHORIZED)
 
-        // Act
-        val response = authService.validateToken(token)
+        Mockito.`when`(
+            restTemplate.exchange(
+                "http://authorization-service:8080/authorize/auth0",
+                HttpMethod.POST,
+                requestEntity,
+                Map::class.java,
+            ),
+        )
 
-        // Assert
-        assert(response.statusCode == HttpStatus.INTERNAL_SERVER_ERROR)
+        val result = authService.validateToken(token)
+        assertNull(result)
+    }
+
+    @Test
+    fun `should return null for exception`() {
+        val token = "exception-token"
+        val headers = HttpHeaders()
+        headers.set("Authorization", token)
+        val requestEntity = HttpEntity<String>(headers)
+
+        Mockito.`when`(
+            restTemplate.exchange(
+                "http://authorization-service:808/authorize/auth0",
+                HttpMethod.POST,
+                requestEntity,
+                Map::class.java,
+            ),
+        ).thenThrow(RuntimeException::class.java)
+
+        val result = authService.validateToken(token)
+        assertNull(result)
     }
 }

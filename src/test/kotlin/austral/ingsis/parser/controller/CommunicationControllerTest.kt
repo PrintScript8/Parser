@@ -3,12 +3,11 @@ package austral.ingsis.parser.controller
 import austral.ingsis.parser.service.AuthService
 import org.junit.jupiter.api.Test
 import org.mockito.Mockito
+import org.mockito.Mockito.`when`
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest
 import org.springframework.boot.test.mock.mockito.MockBean
 import org.springframework.http.HttpHeaders
-import org.springframework.http.HttpStatus
-import org.springframework.http.ResponseEntity
 import org.springframework.test.web.servlet.MockMvc
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers
@@ -32,27 +31,27 @@ class CommunicationControllerTest {
     @Test
     fun `test validateToken endpoint with valid token`() {
         val token = "valid-token"
-        Mockito.`when`(authService.validateToken(token)).thenReturn(ResponseEntity("Valid token", HttpStatus.OK))
+        Mockito.`when`(authService.validateToken(token)).thenReturn("Valid token")
 
         mockMvc.perform(
             MockMvcRequestBuilders.get("/testValidation")
                 .header(HttpHeaders.AUTHORIZATION, token),
         )
             .andExpect(status().isOk)
-            .andExpect(MockMvcResultMatchers.content().string("Valid token"))
+            .andExpect(MockMvcResultMatchers.content().string("Token is valid"))
     }
 
     @Test
     fun `test validateToken endpoint with invalid token`() {
         val token = "invalid-token"
-        Mockito.`when`(authService.validateToken(token))
-            .thenReturn(ResponseEntity("Invalid token", HttpStatus.UNAUTHORIZED))
+        `when`(authService.validateToken(token))
+            .thenReturn(null)
 
         mockMvc.perform(
             MockMvcRequestBuilders.get("/testValidation")
                 .header(HttpHeaders.AUTHORIZATION, token),
         )
-            .andExpect(status().isUnauthorized)
-            .andExpect(MockMvcResultMatchers.content().string("Invalid token"))
+            .andExpect(status().isBadRequest)
+            .andExpect(MockMvcResultMatchers.content().string("Token is invalid"))
     }
 }
