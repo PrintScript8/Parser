@@ -5,6 +5,13 @@ services:
       dockerfile: Dockerfile
     ports:
       - "8081:8080"
+    environment:
+      GITHUB_ACTOR: ${GITHUB_ACTOR}
+      GITHUB_TOKEN: ${GITHUB_TOKEN}
+      REDIS_HOST: event-bus
+      REDIS_PORT: 6379
+    depends_on:
+      - redis
 
   api:
     container_name: "asset-service"
@@ -27,3 +34,12 @@ services:
       - "10002:10002"
     volumes:
       - blob:/workspace
+
+  redis:
+    container_name: "event-bus"
+    image: redis:6-alpine
+    ports:
+      - "6379:6379"
+
+volumes:
+    blob:
