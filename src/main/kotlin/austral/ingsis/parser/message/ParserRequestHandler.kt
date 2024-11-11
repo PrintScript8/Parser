@@ -1,8 +1,9 @@
 package austral.ingsis.parser.message
 
-import austral.ingsis.parser.processor.CodeProcessorFactory
+import austral.ingsis.parser.service.SnippetService
+import com.fasterxml.jackson.databind.ObjectMapper
+import org.apache.logging.log4j.LogManager
 import org.austral.ingsis.redis.RedisStreamConsumer
-import org.slf4j.Logger
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.data.redis.connection.stream.ObjectRecord
@@ -19,25 +20,62 @@ class ParserRequestHandler
         redis: RedisTemplate<String, String>,
         @Value("\${stream.key}") streamKey: String,
         @Value("\${groups.product}") groupId: String,
-        @Autowired private val restClientBuilder: RestClient.Builder
-    ) : RedisStreamConsumer<ExecuteRequest>(streamKey, groupId, redis) {
-    public override fun onMessage(record: ObjectRecord<String, ExecuteRequest>) {
-        val processor = CodeProcessorFactory.getProcessor(record.value.language)
-        val actionHandler = ActionHandler(processor, record, restClientBuilder)
-        when (record.value.action) {
-            "validate" -> actionHandler.handleValidate()
-            "format" -> actionHandler.handleFormat()
-            "execute" -> actionHandler.handleExecute()
-            "analyze" -> actionHandler.handleAnalyze()
-            else -> throw IllegalArgumentException("Invalid action")
+        @Autowired private val restClientBuilder: RestClient.Builder,
+    ) : RedisStreamConsumer<String>(streamKey, groupId, redis) {
+        private val permissionsClient = restClientBuilder.baseUrl("http://permission-service:8080").build()
+        val logger = LogManager.getLogger(ParserRequestHandler::class.java)
+
+        public override fun onMessage(record: ObjectRecord<String, String>) {
+            val objectMapper = ObjectMapper()
+            val jsonMessage = record.value
+            logger.info("Received message: $jsonMessage")
+            val executeRequest = objectMapper.readValue(jsonMessage, ExecuteRequest::class.java)
+            logger.info("Received message: $executeRequest")
+            val snippets = getSnippets(executeRequest.ownerId)
+            val actionHandler = ActionHandler(SnippetService(restClientBuilder), restClientBuilder)
+
+            when (executeRequest.action) {
+                "validate" -> actionHandler.handleValidate(snippets, executeRequest.language)
+                "format" ->
+                    actionHandler.handleFormat(
+                        snippets,
+                        executeRequest.language,
+                        executeRequest.rules,
+                        executeRequest.ownerId,
+                    )
+                "execute" ->
+                    actionHandler.handleExecute(
+                        executeRequest.language,
+                        executeRequest.ownerId,
+                        executeRequest.snippetId,
+                    )
+                "lint" ->
+                    actionHandler.handleAnalyze(
+                        snippets,
+                        executeRequest.language,
+                        executeRequest.rules,
+                        executeRequest.ownerId,
+                    )
+                else -> throw IllegalArgumentException("Invalid action")
+            }
+        }
+
+        @Suppress("MagicNumber")
+        override fun options(): StreamReceiver.StreamReceiverOptions<String, ObjectRecord<String, String>> {
+            return StreamReceiver.StreamReceiverOptions.builder()
+                .pollTimeout(Duration.ofMillis(1000))
+                .targetType(String::class.java) // Use String type here
+                .build()
+        }
+
+        fun getSnippets(ownerId: Long): List<Long> {
+            val response =
+                permissionsClient.get()
+                    .uri("/users/snippets/{id}", ownerId)
+                    .headers { headers -> headers.set("id", ownerId.toString()) }
+                    .retrieve()
+                    .toEntity(List::class.java)
+            logger.info("Received snippets: ${response.body}")
+            return response.body as List<Long>
         }
     }
-
-    @Suppress("MagicNumber")
-    override fun options(): StreamReceiver.StreamReceiverOptions<String, ObjectRecord<String, ExecuteRequest>> {
-        return StreamReceiver.StreamReceiverOptions.builder()
-            .pollTimeout(Duration.ofMillis(1000))
-            .targetType(ExecuteRequest::class.java)
-            .build()
-    }
-}

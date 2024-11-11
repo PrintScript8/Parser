@@ -3,9 +3,15 @@ package austral.ingsis.parser.processor
 interface CodeProcessor {
     fun validate(code: String): Boolean
 
-    fun execute(code: String): List<String>
+    fun execute(
+        code: String,
+        inputs: List<String>,
+    ): List<String>
 
-    fun format(code: String): String
+    fun format(
+        code: String,
+        json: String,
+    ): String
 
     fun analyze(
         code: String,

@@ -1,47 +1,79 @@
 package austral.ingsis.parser.message
 
-import austral.ingsis.parser.processor.CodeProcessor
-import austral.ingsis.parser.model.Snippet
+import austral.ingsis.parser.service.SnippetService
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.data.redis.connection.stream.ObjectRecord
 import org.springframework.web.client.RestClient
 
 class ActionHandler(
-    private val processor: CodeProcessor,
-    private val record: ObjectRecord<String, ExecuteRequest>,
+    @Autowired private val snippetService: SnippetService,
     @Autowired private val restClientBuilder: RestClient.Builder,
 ) {
+    private val snippetClient: RestClient = restClientBuilder.baseUrl("http://snippet-service:8080").build()
 
-    private val bucketClient = restClientBuilder.baseUrl("http://asset-service:8080").build()
-    private val snippetClient = restClientBuilder.baseUrl("http://snippet-service:8082").build()
-
-    fun handleValidate() {
-        val snippet: Snippet? = bucketClient.get()
-            .uri("/v1/asset/{container}/{key}", "snippet", record.value.codeId)
-            .retrieve()
-            .body(Snippet::class.java)
-        if (snippet != null) {
-            val isValid = processor.validate(snippet.code)
+    fun handleValidate(
+        snippets: List<Long>,
+        language: String,
+    ) {
+        for (snippetId in snippets) {
+            val snippet: String = snippetService.getSnippetById(snippetId)
+            snippetService.validateSnippet(snippet, language)
         }
     }
 
-    fun handleFormat() {
-        val snippet: Snippet? = bucketClient.get()
-            .uri("/v1/asset/{container}/{key}", "snippet", record.value.codeId)
-            .retrieve()
-            .body(Snippet::class.java)
-        if (snippet != null) {
-            val formattedCode: String = processor.format(snippet.code)
-            snippet.code = formattedCode
+    fun handleFormat(
+        snippets: List<Long>,
+        language: String,
+        config: String,
+        id: Long,
+    ) {
+        for (snippetId in snippets) {
             snippetClient.put()
-                .uri("/v1/asset/{container}/{key}", "snippet", snippet.id)
-                .body(snippet)
+                .uri("/snippets/status")
+                .headers { headers -> headers.set("id", id.toString()) }
+                .body(SetStatus(snippetId, "pending"))
                 .retrieve()
-                .body(Snippet::class.java)
+                .toEntity(String::class.java)
+        }
+        for (snippetId in snippets) {
+            val snippet: String = snippetService.getSnippetById(snippetId)
+            snippetService.formatSnippet(snippet, language, snippetId, config, id)
         }
     }
 
-    fun handleExecute() {}
+    fun handleExecute(
+        language: String,
+        ownerId: Long,
+        snippetId: Long?,
+    ) {
+        if (snippetId == null) {
+            throw NoSuchElementException("Snippet id is null")
+        }
+        val snippet: String = snippetService.getSnippetById(snippetId)
+        val tests: List<SimpleTest> = snippetService.getTests(snippetId)
+        snippetService.executeMultipleTests(snippet, language, tests, snippetId, ownerId)
+    }
 
-    fun handleAnalyze() {}
+    fun handleAnalyze(
+        snippets: List<Long>,
+        language: String,
+        rules: String,
+        id: Long,
+    ) {
+        for (snippetId in snippets) {
+            snippetClient.put()
+                .uri("/snippets/status")
+                .headers { headers -> headers.set("id", id.toString()) }
+                .body(SetStatus(snippetId, "pending"))
+                .retrieve()
+                .toEntity(String::class.java)
+        }
+        for (snippetId in snippets) {
+            val snippet: String = snippetService.getSnippetById(snippetId)
+            snippetService.analyzeSnippet(snippet, rules, language, snippetId, id)
+        }
+    }
 }
+
+data class SetStatus(val id: Long, val status: String)
+
+data class SimpleTest(val input: List<String>, val output: List<String>)

@@ -1,84 +1,138 @@
 package austral.ingsis.parser.controller
 
-import austral.ingsis.parser.processor.CodeProcessor
-import austral.ingsis.parser.processor.CodeProcessorFactory
-import io.mockk.every
-import io.mockk.mockk
+import austral.ingsis.parser.service.SnippetService
+import jakarta.servlet.http.HttpServletRequest
 import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.extension.ExtendWith
+import org.mockito.Mock
+import org.mockito.Mockito.any
+import org.mockito.Mockito.verify
+import org.mockito.Mockito.`when`
+import org.mockito.junit.jupiter.MockitoExtension
 import org.springframework.http.HttpStatus
+import org.springframework.web.client.RestClient
+import java.lang.reflect.Field
 
+@ExtendWith(MockitoExtension::class)
 class ParserControllerTest {
-    private val codeProcessorFactory = mockk<CodeProcessorFactory>()
-    private val codeProcessor = mockk<CodeProcessor>()
-    private val parserController = ParserController()
+    @Mock
+    private lateinit var clientBuilder: RestClient.Builder
 
-    private val code = "println( 2 );"
-    private val language = "printscript"
-    private val config = "{ \"identifier_format\": \"camel case\"}"
+    @Mock
+    private lateinit var restClient: RestClient
 
-    @Test
-    fun `validateSnippet should return OK if snippet is valid`() {
-        val request = SnippetRequest(code, language, config)
-        every { codeProcessorFactory.getProcessor(request.language) } returns codeProcessor
-        every { codeProcessor.validate(request.code) } returns true
+    @Mock
+    private lateinit var snippetService: SnippetService
 
-        val response = parserController.validateSnippet(request)
+    @Mock
+    private lateinit var httpServletRequest: HttpServletRequest
 
-        assertEquals(HttpStatus.OK, response.statusCode)
-        assertEquals("Valid Snippet", response.body)
+    private lateinit var parserController: ParserController
+
+    @BeforeEach
+    fun setup() {
+        // Mock the builder chain
+        `when`(clientBuilder.baseUrl(any())).thenReturn(clientBuilder)
+        `when`(clientBuilder.build()).thenReturn(restClient)
+
+        // Create the controller
+        parserController = ParserController(clientBuilder)
+
+        // Use reflection to inject our mocked snippetService
+        val snippetServiceField: Field = ParserController::class.java.getDeclaredField("snippetService")
+        snippetServiceField.isAccessible = true
+        snippetServiceField.set(parserController, snippetService)
     }
 
     @Test
-    fun `validateSnippet should return BadRequest if snippet is invalid`() {
-        val wrongCode = "println(2)"
-        val request = SnippetRequest(wrongCode, language, config)
-        every { codeProcessorFactory.getProcessor(request.language) } returns codeProcessor
-        every { codeProcessor.validate(request.code) } returns false
+    fun `validateSnippet returns OK when snippet is valid`() {
+        // Arrange
+        val snippet = ExecuteSnippet("code", "kotlin")
+        `when`(snippetService.validateSnippet(snippet.code, snippet.language)).thenReturn(true)
 
-        val response = parserController.validateSnippet(request)
+        // Act
+        val response = parserController.validateSnippet(snippet)
 
+        // Assert
+        assertEquals(HttpStatus.OK, response.statusCode)
+        assertEquals("Snippet is valid", response.body)
+        verify(snippetService).validateSnippet(snippet.code, snippet.language)
+    }
+
+    @Test
+    fun `validateSnippet returns BAD_REQUEST when snippet is invalid`() {
+        // Arrange
+        val snippet = ExecuteSnippet("invalid code", "kotlin")
+        `when`(snippetService.validateSnippet(snippet.code, snippet.language)).thenReturn(false)
+
+        // Act
+        val response = parserController.validateSnippet(snippet)
+
+        // Assert
         assertEquals(HttpStatus.BAD_REQUEST, response.statusCode)
-        assertEquals(
-            "Invalid Snippet: Missing ';' at end of statement: row=1, startColumn=10, endColumn=10",
-            response.body,
+        assertEquals("Snippet is not valid", response.body)
+        verify(snippetService).validateSnippet(snippet.code, snippet.language)
+    }
+
+    @Test
+    fun `formatSnippet returns formatted code`() {
+        // Arrange
+        val formatRequest = FormatRequest("code", "kotlin", 1L, "config")
+        val userId = 123L
+        val expectedResponse = "formatted code"
+
+        `when`(httpServletRequest.getHeader("id")).thenReturn(userId.toString())
+        `when`(
+            snippetService.formatSnippet(
+                formatRequest.code,
+                formatRequest.language,
+                formatRequest.id,
+                formatRequest.config,
+                userId,
+            ),
+        ).thenReturn(expectedResponse)
+
+        // Act
+        val response = parserController.formatSnippet(formatRequest, httpServletRequest)
+
+        // Assert
+        assertEquals(HttpStatus.OK, response.statusCode)
+        assertEquals(expectedResponse, response.body)
+        verify(snippetService).formatSnippet(
+            formatRequest.code,
+            formatRequest.language,
+            formatRequest.id,
+            formatRequest.config,
+            userId,
         )
     }
 
     @Test
-    fun `formatSnippet should return formatted code`() {
-        val request = SnippetRequest(code, language, config)
-        every { codeProcessorFactory.getProcessor(request.language) } returns codeProcessor
-        every { codeProcessor.format(request.code) } returns "formattedCode"
+    fun `executeTest returns test results`() {
+        // Arrange
+        val testRequest = TestRequest("test code", "kotlin", listOf("input1", "input2"))
+        val expectedResponse = listOf("result1", "result2")
 
-        val response = parserController.formatSnippet(request)
+        `when`(
+            snippetService.executeTest(
+                testRequest.code,
+                testRequest.language,
+                testRequest.input,
+            ),
+        ).thenReturn(expectedResponse)
 
+        // Act
+        val response = parserController.executeTest(testRequest)
+
+        // Assert
         assertEquals(HttpStatus.OK, response.statusCode)
-        assertEquals("println(2);", response.body)
-    }
-
-    @Test
-    fun `executeSnippet should return execution output`() {
-        val request = SnippetRequest(code, language, config)
-        every { codeProcessorFactory.getProcessor(request.language) } returns codeProcessor
-        every { codeProcessor.execute(request.code) } returns listOf("output")
-
-        val response = parserController.executeSnippet(request)
-
-        assertEquals(HttpStatus.OK, response.statusCode)
-        assertEquals(listOf("2"), response.body)
-    }
-
-    @Test
-    fun `analyzeSnippet should return analysis errors`() {
-        val request = SnippetRequest(code, language, config)
-        val errorType = mockk<error.Type>() // Mock or create a valid Type instance
-        every { codeProcessorFactory.getProcessor(request.language) } returns codeProcessor
-        every { codeProcessor.analyze(request.code, request.config) } returns listOf(error.Error(errorType, "error"))
-
-        val response = parserController.analyzeSnippet(request)
-
-        assertEquals(HttpStatus.OK, response.statusCode)
-        assertEquals(emptyList<Error>(), response.body)
+        assertEquals(expectedResponse, response.body)
+        verify(snippetService).executeTest(
+            testRequest.code,
+            testRequest.language,
+            testRequest.input,
+        )
     }
 }
