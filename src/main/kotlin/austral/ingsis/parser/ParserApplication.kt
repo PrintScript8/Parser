@@ -3,7 +3,7 @@ package austral.ingsis.parser
 import org.springframework.boot.autoconfigure.SpringBootApplication
 import org.springframework.boot.runApplication
 
-@SpringBootApplication(scanBasePackages = ["austral.ingsis.parser.controller"])
+@SpringBootApplication(scanBasePackages = ["austral.ingsis.parser"])
 class ParserApplication
 
 fun main(args: Array<String>) {

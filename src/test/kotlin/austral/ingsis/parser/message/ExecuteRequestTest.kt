@@ -1,24 +1,43 @@
 package austral.ingsis.parser.message
 
 import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.Assertions.assertNull
 import org.junit.jupiter.api.Test
 
 class ExecuteRequestTest {
     @Test
-    fun `should create ExecuteRequest object with correct properties`() {
-        // Arrange
-        val language = "Kotlin"
-        val code = "println('Hello World')"
-        val action = "execute"
-        val inputs = "[]"
+    fun `test ExecuteRequest creation`() {
+        val executeRequest =
+            ExecuteRequest(
+                ownerId = 1L,
+                language = "Kotlin",
+                rules = "rule1",
+                action = "execute",
+                snippetId = 2L,
+            )
 
-        // Act
-        val request = ExecuteRequest(language, code, action, inputs)
+        assertEquals(1L, executeRequest.ownerId)
+        assertEquals("Kotlin", executeRequest.language)
+        assertEquals("rule1", executeRequest.rules)
+        assertEquals("execute", executeRequest.action)
+        assertEquals(2L, executeRequest.snippetId)
+    }
 
-        // Assert
-        assertEquals(language, request.language)
-        assertEquals(code, request.code)
-        assertEquals(action, request.action)
-        assertEquals(inputs, request.inputs)
+    @Test
+    fun `test ExecuteRequest creation with null snippetId`() {
+        val executeRequest =
+            ExecuteRequest(
+                ownerId = 1L,
+                language = "Kotlin",
+                rules = "rule1",
+                action = "execute",
+                snippetId = null,
+            )
+
+        assertEquals(1L, executeRequest.ownerId)
+        assertEquals("Kotlin", executeRequest.language)
+        assertEquals("rule1", executeRequest.rules)
+        assertEquals("execute", executeRequest.action)
+        assertNull(executeRequest.snippetId)
     }
 }
