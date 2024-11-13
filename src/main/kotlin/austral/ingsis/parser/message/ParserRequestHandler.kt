@@ -80,11 +80,11 @@ class ParserRequestHandler
             throw AccessDeniedException("Could not validate user by it's token")
         }
 
-        fun getSnippets(ownerId: String): List<Long> {
+        fun getSnippets(token: String): List<Long> {
             val response =
                 permissionsClient.get()
-                    .uri("/users/snippets/{id}", ownerId)
-                    .headers { headers -> headers.set("id", ownerId.toString()) }
+                    .uri("/users/snippets")
+                    .header("Authorization", token)
                     .retrieve()
                     .toEntity(List::class.java)
             logger.info("Received snippets: ${response.body}")
