@@ -1,4 +1,5 @@
 package austral.ingsis.parser.service
+
 import org.springframework.http.HttpEntity
 import org.springframework.http.HttpHeaders
 import org.springframework.http.HttpMethod

@@ -33,7 +33,7 @@ class ParserRequestHandlerTest {
         every { authService.validateToken(any()) } returns "testToken"
 
         parserRequestHandler =
-            spyk(ParserRequestHandler(redisTemplate, "streamKey", "groupId", restClientBuilder, authService)) {
+            spyk(ParserRequestHandler(redisTemplate, "streamKey", "groupId", restClientBuilder)) {
                 every { this@spyk.logger } returns this@ParserRequestHandlerTest.logger
             }
     }
