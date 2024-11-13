@@ -1,5 +1,6 @@
 package austral.ingsis.parser.service
 
+import austral.ingsis.parser.exception.ProcessorException
 import austral.ingsis.parser.message.SetStatus
 import austral.ingsis.parser.message.SimpleTest
 import austral.ingsis.parser.processor.CodeProcessorFactory
@@ -23,7 +24,12 @@ class SnippetService(
         snippet: String,
         language: String,
     ): Boolean {
-        return CodeProcessorFactory.getProcessor(language).validate(snippet)
+        return try {
+            CodeProcessorFactory.getProcessor(language).validate(snippet)
+        } catch (e: ProcessorException) {
+            logger.error("Invalid snippet: $e")
+            false
+        }
     }
 
     fun formatSnippet(
