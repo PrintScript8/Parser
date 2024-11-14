@@ -1,6 +1,6 @@
 plugins {
 	id 'org.jetbrains.kotlin.jvm' version '2.0.10'
-	id 'org.jetbrains.kotlin.plugin.spring' version '1.9.25'
+	id 'org.jetbrains.kotlin.plugin.spring' version '2.0.10'
 	id 'org.springframework.boot' version '3.3.4'
 	id 'io.spring.dependency-management' version '1.1.6'
 	id 'edu.austral.ingsis.code-analysis' version '1.0.63'
@@ -26,6 +26,14 @@ repositories {
 			password = System.getenv("GITHUB_TOKEN")
 		}
 	}
+	maven {
+		name = "IngSis Redis Streams"
+		url = uri("https://maven.pkg.github.com/austral-ingsis/class-redis-streams")
+		credentials {
+			username = System.getenv("GITHUB_ACTOR")
+			password = System.getenv("GITHUB_TOKEN")
+		}
+	}
 }
 
 dependencies {
@@ -33,8 +41,11 @@ dependencies {
 	implementation 'com.fasterxml.jackson.module:jackson-module-kotlin'
 	implementation 'org.jetbrains.kotlin:kotlin-reflect'
 	implementation "io.github.cdimascio:dotenv-java:2.2.0"
-	implementation 'edu.austral.ingsis:runner:1.1.0'
-	implementation 'edu.austral.ingsis:linter:1.1.0'
+	implementation 'edu.austral.ingsis:runner:1.1.1-SNAPSHOT'
+	implementation 'edu.austral.ingsis:linter:1.1.1-SNAPSHOT'
+	implementation 'org.postgresql:postgresql:42.5.4'
+	annotationProcessor 'org.projectlombok:lombok'
+	implementation 'jakarta.persistence:jakarta.persistence-api:3.1.0'
 
 	testImplementation 'org.springframework.boot:spring-boot-starter-test'
 	testImplementation 'org.jetbrains.kotlin:kotlin-test-junit5'
@@ -42,6 +53,10 @@ dependencies {
 	testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
 	testImplementation 'org.junit.jupiter:junit-jupiter-api:5.10.0'
 	testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.10.0'
+
+	// IngSis Async communication
+	implementation 'org.austral.ingsis:redis-streams-mvc:0.1.13'
+	implementation 'org.springframework.boot:spring-boot-starter-data-redis-reactive'
 }
 
 tasks.named('test') {

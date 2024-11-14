@@ -12,27 +12,33 @@ class PrintScriptProcessor : CodeProcessor {
         return try {
             runner.validate()
             true
-        } catch (e: ProcessorException) {
+        } catch (e: IllegalArgumentException) {
             throw ProcessorException("Validation failed for the given code", e)
         }
     }
 
-    override fun execute(code: String): List<String> {
-        val runner = Operations(toInputStream(code), "1.1", null)
+    override fun execute(
+        code: String,
+        inputs: List<String>,
+    ): List<String> {
+        val runner = Operations(toInputStream(code), "1.1", inputs.iterator())
 
         return try {
             runner.execute().asSequence().toList()
-        } catch (e: ProcessorException) {
+        } catch (e: IllegalArgumentException) {
             throw ProcessorException("Execution failed", e)
         }
     }
 
-    override fun format(code: String): String {
+    override fun format(
+        code: String,
+        json: String,
+    ): String {
         val runner = Operations(toInputStream(code), "1.1", null)
 
         return try {
-            runner.format()
-        } catch (e: ProcessorException) {
+            runner.format(json)
+        } catch (e: IllegalArgumentException) {
             throw ProcessorException("Formatting failed", e)
         }
     }
@@ -45,7 +51,7 @@ class PrintScriptProcessor : CodeProcessor {
 
         return try {
             runner.analyze(config)
-        } catch (e: ProcessorException) {
+        } catch (e: IllegalArgumentException) {
             throw ProcessorException("Analysis failed", e)
         }
     }

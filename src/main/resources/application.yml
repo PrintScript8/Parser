@@ -1,0 +1,14 @@
+# redis host and port parameters
+spring:
+  data:
+    redis:
+      host: event-bus
+      port: 6379
+
+# streamKeys to be used by producers
+stream:
+  key: "mystream"
+
+# groupIds to be used by consumers
+groups:
+  product: "productcreated"
