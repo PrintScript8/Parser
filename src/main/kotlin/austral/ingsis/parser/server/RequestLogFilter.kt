@@ -9,7 +9,7 @@ import reactor.core.publisher.Mono
 
 @Component
 class RequestLogFilter : WebFilter {
-    val logger = LoggerFactory.getLogger(RequestLogFilter::class.java)
+    var logger = LoggerFactory.getLogger(RequestLogFilter::class.java)
 
     override fun filter(
         exchange: ServerWebExchange,

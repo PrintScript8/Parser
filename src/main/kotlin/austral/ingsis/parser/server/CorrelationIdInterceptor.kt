@@ -10,7 +10,7 @@ import java.util.UUID
 
 @Component
 class CorrelationIdInterceptor : ClientHttpRequestInterceptor {
-    private val logger = LoggerFactory.getLogger(CorrelationIdInterceptor::class.java)
+    var logger = LoggerFactory.getLogger(CorrelationIdInterceptor::class.java)
 
     override fun intercept(
         request: HttpRequest,

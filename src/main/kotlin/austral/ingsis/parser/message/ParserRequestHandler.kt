@@ -60,7 +60,7 @@ class ParserRequestHandler
         }
 
         @Suppress("MagicNumber")
-        override fun options(): StreamReceiver.StreamReceiverOptions<String, ObjectRecord<String, String>> {
+        public override fun options(): StreamReceiver.StreamReceiverOptions<String, ObjectRecord<String, String>> {
             return StreamReceiver.StreamReceiverOptions.builder()
                 .pollTimeout(Duration.ofMillis(1000))
                 .targetType(String::class.java) // Use String type here
