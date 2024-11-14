@@ -10,6 +10,7 @@ services:
       GITHUB_TOKEN: ${GITHUB_TOKEN}
       REDIS_HOST: event-bus
       REDIS_PORT: 6379
+      NEW_RELIC_LICENSE_KEY: ${NEW_RELIC_LICENSE_KEY}
     depends_on:
       - redis
 

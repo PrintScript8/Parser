@@ -31,6 +31,7 @@ class ParserControllerTest {
     fun setup() {
         // Mock the builder chain
         `when`(clientBuilder.baseUrl(any())).thenReturn(clientBuilder)
+        `when`(clientBuilder.requestInterceptor(any())).thenReturn(clientBuilder)
         `when`(clientBuilder.build()).thenReturn(restClient)
 
         // Create the controller

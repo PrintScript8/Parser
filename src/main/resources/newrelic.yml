@@ -1,0 +1,8 @@
+common: &common
+  license_key: ${NEW_RELIC_LICENSE_KEY}
+
+  app_name: Parser (Production)
+  log_level: info
+
+production:
+  <<: *common

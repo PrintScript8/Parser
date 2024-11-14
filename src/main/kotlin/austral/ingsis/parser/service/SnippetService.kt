@@ -4,6 +4,7 @@ import austral.ingsis.parser.exception.ProcessorException
 import austral.ingsis.parser.message.SetStatus
 import austral.ingsis.parser.message.SimpleTest
 import austral.ingsis.parser.processor.CodeProcessorFactory
+import austral.ingsis.parser.server.CorrelationIdInterceptor
 import org.apache.logging.log4j.LogManager
 import org.apache.logging.log4j.Logger
 import org.springframework.beans.factory.annotation.Autowired
@@ -16,8 +17,13 @@ import org.springframework.web.client.RestClient
 class SnippetService(
     @Autowired final val restClientBuilder: RestClient.Builder,
 ) {
-    var bucketClient: RestClient = restClientBuilder.baseUrl("http://asset-service:8080").build()
-    var snippetClient: RestClient = restClientBuilder.baseUrl("http://snippet-service:8080").build()
+    private val interceptor = CorrelationIdInterceptor()
+    var bucketClient: RestClient =
+        restClientBuilder.baseUrl("http://asset-service:8080")
+            .requestInterceptor(interceptor).build()
+    var snippetClient: RestClient =
+        restClientBuilder.baseUrl("http://snippet-service:8080")
+            .requestInterceptor(interceptor).build()
     val logger: Logger = LogManager.getLogger(SnippetService::class.java)
 
     fun validateSnippet(

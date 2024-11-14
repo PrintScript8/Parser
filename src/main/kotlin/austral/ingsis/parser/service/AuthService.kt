@@ -1,5 +1,6 @@
 package austral.ingsis.parser.service
 
+import austral.ingsis.parser.server.CorrelationIdInterceptor
 import org.springframework.http.HttpEntity
 import org.springframework.http.HttpHeaders
 import org.springframework.http.HttpMethod
@@ -9,10 +10,12 @@ import org.springframework.web.client.RestTemplate
 
 @Service
 class AuthService {
+    private val interceptor = CorrelationIdInterceptor()
     var restTemplate = RestTemplate()
 
     @Suppress("TooGenericExceptionCaught", "SwallowedException")
     fun validateToken(token: String): String? {
+        restTemplate.interceptors.add(interceptor)
         return try {
             // Prepare headers with the Authorization token
             val headers = HttpHeaders()
